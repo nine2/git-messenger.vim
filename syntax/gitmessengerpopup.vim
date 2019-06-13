@@ -31,13 +31,22 @@ hi def link gitmessengerHash        Comment
 hi def link gitmessengerHistory     Constant
 hi def link gitmessengerPopupNormal NormalFloat
 
+
 hi def link diffOldFile   diffFile
 hi def link diffNewFile   diffFile
-hi def link diffIndexLine PreProc
-hi def link diffFile      Type
-hi def link diffRemoved   Special
-hi def link diffAdded     Identifier
-hi def link diffLine      Statement
-hi def link diffSubname   PreProc
+hi def link diffIndexLine DarkBlue
+hi def link diffFile      DarkYellow
+hi def link diffRemoved   DarkRed
+hi def link diffAdded     DarkGreen
+hi def link diffLine      DarkPink
+hi def link diffSubname   DarkBlue
+"hi def link diffOldFile   diffFile
+"hi def link diffNewFile   diffFile
+"hi def link diffIndexLine PreProc
+"hi def link diffFile      Type
+"hi def link diffRemoved   Special
+"hi def link diffAdded     Identifier
+"hi def link diffLine      Statement
+"hi def link diffSubname   PreProc
 
 let b:current_syntax = 'gitmessengerpopup'
