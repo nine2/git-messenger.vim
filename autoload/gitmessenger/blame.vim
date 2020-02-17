@@ -39,7 +39,7 @@ function! s:blame__back() dict abort
     " Reset current state
     let self.state.diff = 'none'
 
-    let args = ['--no-pager', 'blame', self.prev_commit, '-L', self.line . ',+1', '--porcelain', '--', self.blame_file]
+    let args = ['--no-pager', 'blame', self.prev_commit, '-L', self.line . ',+1', '--porcelain'] + split(g:git_messenger_extra_blame_args, ' ') + ['--', self.blame_file]
     call self.spawn_git(args, 's:blame__after_blame')
 endfunction
 let s:blame.back = funcref('s:blame__back')
@@ -135,6 +135,13 @@ function! s:blame__after_diff(next_diff, git) dict abort
         \ (popup_open && !has_key(self.popup, 'bufnr'))
         return
     endif
+
+    " When getting diff with `git show --pretty=format:%b`, it may contain
+    " commit body. By removing line until 'diff --git ...' line, the body is
+    " removed (#35)
+    while a:git.stdout !=# [] && stridx(a:git.stdout[0], 'diff --git ') !=# 0
+        let a:git.stdout = a:git.stdout[1:]
+    endwhile
 
     call self.append_lines(a:git.stdout)
     let self.state.diff = a:next_diff
@@ -260,20 +267,21 @@ function! s:blame__after_blame(git) dict abort
 
     let author = matchstr(stdout[1], '^author \zs.\+')
     let author_email = matchstr(stdout[2], '^author-mail \zs\S\+')
+    let committer = matchstr(stdout[5], '^committer \zs.\+')
+    let pad = author !=# committer ? '  ' : ''
     let self.state.contents = [
         \   '',
-        \   ' History: #' . self.state.history_no(),
-        \   ' Commit: ' . hash,
-        \   ' Author: ' . author . ' ' . author_email,
+        \   ' History: ' . pad . '#' . self.state.history_no(),
+        \   ' Commit:  ' . pad . hash,
+        \   ' Author:  ' . pad . author . ' ' . author_email,
         \ ]
-    let committer = matchstr(stdout[5], '^committer \zs.\+')
     if author !=# committer
         let committer_email = matchstr(stdout[6], '^committer-mail \zs\S\+')
         let self.state.contents += [' Committer: ' . committer . ' ' . committer_email]
     endif
     if exists('*strftime')
         let author_time = matchstr(stdout[3], '^author-time \zs\d\+')
-        let self.state.contents += [' Date: ' . strftime('%c', str2nr(author_time))]
+        let self.state.contents += [' Date:    ' . pad . strftime('%c', str2nr(author_time))]
     endif
 
     if not_committed_yet
@@ -390,7 +398,7 @@ let s:blame.spawn_git = funcref('s:blame__spawn_git')
 
 function! s:blame__start() dict abort
     call self.spawn_git(
-        \ ['--no-pager', 'blame', self.blame_file, '-L', self.line . ',+1', '--porcelain'],
+        \ ['--no-pager', 'blame', self.blame_file, '-L', self.line . ',+1', '--porcelain'] + split(g:git_messenger_extra_blame_args, ' '),
         \ 's:blame__after_blame')
 endfunction
 let s:blame.start = funcref('s:blame__start')
@@ -426,7 +434,7 @@ function! gitmessenger#blame#new(file, line, opts) abort
 
     " Validations
     if b.git_root ==# ''
-        call b.error("git-messenger: Directory '" . dir . "' is not in the Git repository")
+        call b.error("git-messenger: Directory '" . dir . "' is not inside a Git repository")
         return v:null
     endif
 

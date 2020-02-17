@@ -4,6 +4,7 @@ let g:git_messenger_git_command = get(g:, 'git_messenger_git_command', 'git')
 let g:git_messenger_into_popup_after_show = get(g:, 'git_messenger_into_popup_after_show', v:true)
 let g:git_messenger_always_into_popup = get(g:, 'git_messenger_always_into_popup', v:false)
 let g:git_messenger_preview_mods = get(g:, 'git_messenger_preview_mods', '')
+let g:git_messenger_extra_blame_args = get(g:, 'git_messenger_extra_blame_args', '')
 let g:git_messenger_include_diff = get(g:, 'git_messenger_include_diff', 'none')
 let g:git_messenger_max_popup_height = get(g:, 'git_messenger_max_popup_height', v:null)
 let g:git_messenger_max_popup_width = get(g:, 'git_messenger_max_popup_width', v:null)
@@ -18,7 +19,8 @@ function! s:on_cursor_moved() abort
         return
     endif
     let popup = s:all_popups[bufnr]
-    if popup.opened_at != getpos('.')
+    let pos = win_screenpos('.')
+    if popup.opened_at != [pos[1] + wincol() - 1, pos[0] + winline() - 1]
         autocmd! plugin-git-messenger-close * <buffer>
         call gitmessenger#close_popup(bufnr)
     endif

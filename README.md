@@ -1,6 +1,7 @@
 git-messenger.vim
 =================
-[![Build Status][travis-ci-badge]][travis-ci]
+[![Build Status][ci-badge]][ci]
+[![codecov][codecov-badge]][codecov]
 
 [git-messenger.vim][repo] is a Vim/Neovim plugin to reveal the hidden message from Git under the
 cursor quickly. It shows the history of commits under the cursor in popup window.
@@ -72,13 +73,8 @@ call minpac#add('rhysd/git-messenger.vim')
 
 When you're using Vim's builtin packager, please follow instruction at `:help pack-add`.
 
-To enable a floating window support, you need to install Neovim 0.4 or later. The version is not
-yet released. You need to install Neovim from [nightly release][nightly] or by building from source
-at this point. If you use macOS, it's quite easy with Homebrew.
-
-```
-$ brew install neovim --HEAD
-```
+To enable a floating window support, you need to install Neovim 0.4 or later.
+Please follow [the official instruction][nvim-install].
 
 To check if Neovim's floating window feature is available, try `:checkhealth`.
 
@@ -199,6 +195,11 @@ showing a popup does not move the cursor in the window.
 When this value is set to `v:true`, the cursor goes into a popup window when running `:GitMessenger`
 or `<Plug>(git-messenger)`.
 
+#### `g:git_messenger_extra_blame_args` (Default: `""`)
+
+When this variable is set the contents will be appended to the git blame
+command. Use it to add options (like -w).
+
 #### `g:git_messenger_preview_mods` (Default: `""`)
 
 This variable is effective only when opening preview window (on Neovim (0.3.0 or earlier) or Vim).
@@ -287,7 +288,10 @@ On Vim, please install [vim-healthcheck](https://github.com/rhysd/vim-healthchec
 Distributed under [the MIT License](LICENSE)
 
 [repo]: https://github.com/rhysd/git-messenger.vim
-[travis-ci-badge]: https://travis-ci.org/rhysd/git-messenger.vim.svg?branch=master
-[travis-ci]: https://travis-ci.org/rhysd/git-messenger.vim
+[ci-badge]: https://github.com/rhysd/git-messenger.vim/workflows/CI/badge.svg?branch=master&event=push
+[ci]: https://github.com/rhysd/git-messenger.vim/actions?query=workflow%3ACI+branch%3Amaster
+[codecov]: https://codecov.io/gh/rhysd/git-messenger.vim
+[codecov-badge]: https://codecov.io/gh/rhysd/git-messenger.vim/branch/master/graph/badge.svg
 [doc]: ./doc/git-messenger.txt
-[nightly]: https://github.com/neovim/neovim/releases/tag/nightly
+[nvim-install]: https://github.com/neovim/neovim/wiki/Installing-Neovim
+

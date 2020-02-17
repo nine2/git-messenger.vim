@@ -1,5 +1,37 @@
 let s:SEP = has('win32') ? '\' : '/'
 
+function! s:find_dotgit(from) abort
+    let dir = finddir('.git', a:from . ';')
+    let file = findfile('.git', a:from . ';')
+
+    if dir ==# '' && file ==# ''
+        return ''
+    endif
+
+    " When .git directory is below the current working directory, finddir()
+    " returns a relative path. So ensuring an absolute path here.
+    let dir = dir ==# '' ? '' : fnamemodify(dir, ':p')
+
+    " When .git exists in current directory, findfile() returns relative path
+    " '.git' though finddir() returns an absolute path '/path/to/.git' (#49).
+    " Since path length will be compared, they must be both abusolute path.
+    let file = file ==# '' ? '' : fnamemodify(file, ':p')
+
+    " Choose larger (deeper) path (#48). When worktree directory is put in its
+    " main repository, the .git directory which is near to `from` should be
+    " chosen.
+    " When `dir` or `file` is empty, the other is chosen so we don't need to
+    " care about empty string here.
+    let dotgit = len(dir) > len(file) ? dir : file
+
+    if dotgit[-1:] ==# s:SEP
+        " [:-2] chops last path separator
+        let dotgit = dotgit[:-2]
+    endif
+
+    return dotgit
+endfunction
+
 " Params:
 "   path: string
 "     base path to find .git in ancestor directories
@@ -8,42 +40,18 @@ let s:SEP = has('win32') ? '\' : '/'
 "     empty string means root directory was not found
 function! gitmessenger#git#root_dir(from) abort
     let from = fnamemodify(a:from, ':p')
-    if from[-1:] ==# s:SEP
-        " [:-2] chops last path separator
-        let from = from[:-2]
-    endif
-    let gitdir = finddir('.git', from . ';')
-    if gitdir !=# ''
-        if stridx(from, fnamemodify(gitdir, ':p')) == 0
-            " Inside .git directory is outside repository
-            return ''
-        endif
-        " -5 means chopping '.git'
-        return fnamemodify(gitdir[ : -5], ':p')
+    let dotgit = s:find_dotgit(from)
+    if dotgit ==# ''
+        return ''
     endif
 
-    let gitfile = findfile('.git', a:from . ';')
-    if gitfile !=# ''
-        let lines = readfile(gitfile)
-        if lines == []
-            return ''
-        endif
-
-        let rel_gitdir = matchstr(lines[0], '^gitdir:\s*\zs.\+$')
-        if rel_gitdir ==# ''
-            return ''
-        endif
-
-        " -5 means chopping '.git'
-        let gitdir = gitfile[ : -5] . rel_gitdir
-
-        " Note: fnamemodify() returns canonical path so we don't need to care
-        " about that 'rel_gitdir' path is absolute or relative.
-        "   fnamemodify('.//foo',  ':p') => /path/to/foo
-        return fnamemodify(gitdir, ':p:h')
+    if stridx(from, dotgit) == 0
+        " Inside .git directory is outside repository
+        return ''
     endif
 
-    return ''
+    " /path/to/.git => /path/to
+    return fnamemodify(dotgit, ':h')
 endfunction
 
 let s:git = {}
